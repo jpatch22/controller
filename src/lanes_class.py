@@ -95,7 +95,7 @@ class Lane_Detection:
     def hl_left_none(self, image, right_averaged_lines):
         hl = np.copy(right_averaged_lines)
         shift = self.shift_ratio * image.shape[1]
-        print("SHIFT", shift, self.shift_ratio)
+        # print("SHIFT", shift, self.shift_ratio)
         hl[0][0] = right_averaged_lines[0][0] - int(shift)
         hl[0][2] = right_averaged_lines[0][2] - int(shift)
         return hl
@@ -103,7 +103,7 @@ class Lane_Detection:
     def hl_right_none(self, image, left_averaged_lines):
         hl = np.copy(left_averaged_lines)
         shift = self.shift_ratio * image.shape[1]
-        print("SHIFT", shift, self.shift_ratio)
+        # print("SHIFT", shift, self.shift_ratio)
         hl[0][0] = left_averaged_lines[0][0] + int(shift)
         hl[0][2] = left_averaged_lines[0][2] + int(shift)
         return hl
@@ -131,8 +131,8 @@ class Lane_Detection:
         else:
             left_averaged_lines = None
             left_line_image = None
-            left_lane_bottom = None
-            print("No left line detected")
+            left_lane_bottom = 0
+            #print("No left line detected")
 
         if right_lines is not None:
             right_averaged_lines = self.averaged_lines(lane_image, right_lines)
@@ -141,8 +141,8 @@ class Lane_Detection:
         else:
             right_averaged_lines = None
             right_line_image = None
-            right_lane_bottom = None
-            print("No right line detected")
+            right_lane_bottom = width
+            #print("No right line detected")
 
         if left_lines is not None and right_lines is not None:
             hl = self.heading_line_no_none(left_averaged_lines, right_averaged_lines)
@@ -168,4 +168,4 @@ class Lane_Detection:
 
         combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
 
-        return (combo_image, hl)
+        return (combo_image, hl, left_lane_bottom, right_lane_bottom)

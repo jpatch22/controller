@@ -1,14 +1,26 @@
+import numpy as np
+
 class Driver:
     def __init__(self):
-        self.alignment_constant = 0.0001
-        self.direction_constant = 0.00003
-        self.basic_forward_velocity = 0.02
+        self.left_correct_intercept = 160
+        self.right_correct_intercept = 1180
+        self.basic_forward_velocity = 0.1
+        self.turning_constant = 0.003
 
-    def controller(self, heading_line, width):
-        print('HL', heading_line)
-        direction_term = self.alignment_constant * (heading_line[0][0] - heading_line[0][2])
-        alignment_term = self.alignment_constant * (heading_line[0][2] + heading_line[0][1] - width)
+        self.forward_speed_reduction_constant = 10 ** (-1)
 
-        angular_velocty = direction_term
+    def controller(self, left_lane_bottom, right_lane_bottom, line_to_follow):
+        angular_velocty = 0
+        forward_velocity = self.basic_forward_velocity
+        if line_to_follow == 'R':
+            angular_velocty = self.turning_constant * (self.right_correct_intercept - right_lane_bottom)
+            print("right_lane_bottom", right_lane_bottom)
+        else:
+            angular_velocty = self.turning_constant * (self.left_correct_intercept - left_lane_bottom)
 
-        return (self.basic_forward_velocity, angular_velocty)
+        if forward_velocity - self.forward_speed_reduction_constant * angular_velocty < 0:
+            forward_velocity = 0
+        else:
+            forward_velocity = forward_velocity - self.forward_speed_reduction_constant * angular_velocty 
+
+        return (forward_velocity, angular_velocty)

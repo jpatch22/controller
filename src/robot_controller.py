@@ -36,8 +36,8 @@ class controller():
         except CvBridgeError as e:
               print(e)
 
-        combo_image, hl = self.Lane_Detection.process_image(cv_image)
-        forward_velocity, angular_velocity = self.Driver.controller(hl, cv_image.shape[1])
+        combo_image, hl, left_lane_bottom, right_lane_bottom = self.Lane_Detection.process_image(cv_image)
+        forward_velocity, angular_velocity = self.Driver.controller(left_lane_bottom, right_lane_bottom, 'L')
 
         font                   = cv2.FONT_HERSHEY_SIMPLEX
         bottomLeftCornerOfText = (10,500)
@@ -57,7 +57,7 @@ class controller():
         self.vel_pub.publish(self.twist)
 
         cv2.imshow("Image window", combo_image)
-        cv2.imshow("Canny", self.Lane_Detection.canny(cv_image))
+        # cv2.imshow("Canny", self.Lane_Detection.canny(cv_image))
         cv2.waitKey(3)
 
 
