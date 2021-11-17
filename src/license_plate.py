@@ -31,7 +31,6 @@ class License_Plate():
 
 	def find_Car(self,image):
 		self.cardetected = False
-		image = image[350:710,0:1270]
 		canny = cv2.Canny(image, 50, 120)
 		hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 		gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
@@ -51,22 +50,11 @@ class License_Plate():
 			return (image,self.cardetected)
 		return (image, self.cardetected)
 
-	def get_license_region(self,image):
-		self.license_in_frame = False
+	def get_license_region(self, image):
 		if (self.cardetected == True):
 			imagecopy = image[self.ymin:self.ymax,self.xmin:self.xmax]
-			hsv = cv2.cvtColor(imagecopy,cv2.COLOR_BGR2HSV)
-			if hsv is None:
-				return (image,self.license_in_frame)
-			
-			# mask = cv2.inRange(hsv, np.array([20,20,70], dtype = "uint8") , np.array([25,25,255],dtype = "uint8"))
-			# bitwise = cv2.bitwise_and(imagecopy,imagecopy,mask=mask)
-			# ratio_white = cv2.countNonZero(mask)/(imagecopy.size)
-			# percentage_white = (ratio_white * 100)
-			# if (percentage_white>40):
-			# 	self.license_in_frame = True
-			return (imagecopy, self.license_in_frame)
-		return (image,self.license_in_frame)
+			return imagecopy
+		return image
 
 	
 

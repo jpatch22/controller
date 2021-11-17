@@ -144,28 +144,14 @@ class Lane_Detection:
             right_lane_bottom = width
             #print("No right line detected")
 
-        if left_lines is not None and right_lines is not None:
-            hl = self.heading_line_no_none(left_averaged_lines, right_averaged_lines)
-        elif left_lines is None and right_lines is None:
-            mid = int(width / 2)
-            thing = np.array([mid, height, mid, height-self.cutoff])
-            hl = np.array([thing])
-        elif left_lines is None:
-            hl = self.hl_left_none(lane_image, right_averaged_lines)
-        elif right_lines is None:
-            hl = self.hl_right_none(lane_image, left_averaged_lines)
-
-
-
-        heading_line_image = self.display_heading_line(lane_image, hl)
-        line_image = heading_line_image
+        line_image = np.zeros(lane_image.shape, dtype=np.uint8)
         if left_line_image is not None:
             line_image += left_line_image
-            lane_image = cv2.circle(lane_image, (left_lane_bottom, height - 50), 50, (255, 0, 0), -1)
+            line_image = cv2.circle(line_image, (left_lane_bottom, height - 50), 50, (255, 0, 0), -1)
         if right_line_image is not None:
             line_image += right_line_image
-            lane_image = cv2.circle(lane_image, (right_lane_bottom, height - 50), 50, (0, 255, 0), -1)
+            line_image = cv2.circle(line_image, (right_lane_bottom, height - 50), 50, (0, 255, 0), -1)
 
         combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
 
-        return (combo_image, hl, left_lane_bottom, right_lane_bottom)
+        return (line_image, left_lane_bottom, right_lane_bottom)
