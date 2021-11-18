@@ -84,7 +84,6 @@ class controller():
         
 
         if self.number_red(cv_image) > 300:
-            print("Crossing")
             forward_velocity = 0.2
             angular_velocty = 0
         else:
@@ -102,11 +101,21 @@ class controller():
         # cv2.imshow("contours",edged)
         x = int(self.number_blue(cv_image))
         if x > 75:
-            print(x)
             image2, car_found = self.License_Plate.find_Car(cv_image)
             if(car_found == True):
-                image3 = self.License_Plate.get_license_region(image2)
-                cv2.imshow("cropped",image3)
+                cropped = self.License_Plate.get_license_region(image2)
+                print("cropped", cropped)
+                if cropped.size == 0:
+                    print('HERE')
+                else:
+                    crop_height, crop_width, useless = cropped.shape
+                    print("SIZE", crop_height, crop_width)
+                    Parking_number_image = cropped[int(crop_height / 3):2*int(crop_height)/3,int(crop_width / 2):int(crop_width * 9.0 / 10)]
+                    cv2.imshow("Parking_number_image", Parking_number_image)
+                    cv2.imshow("cropped", cropped)
+                    license_plate_image = cropped[2*int(crop_height / 3):,:]
+                    cv2.imshow("license_plate_image", license_plate_image)
+                
         else:
             image2 = cv_image
         image2 = cv2.addWeighted(image2, 0.8, line_image, 1, 1)
