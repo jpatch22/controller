@@ -21,6 +21,7 @@ from rosgraph_msgs.msg import Clock
 from lanes_class import Lane_Detection
 from driver import Driver
 from license_plate import License_Plate
+from reader import Reader
 
 class controller():
 
@@ -36,6 +37,7 @@ class controller():
         self.Driver = Driver()
         self.License_Plate = License_Plate()
         self.timer_starter = False
+        self.Reader = Reader()
 
         self.start_time = 0
 
@@ -106,15 +108,16 @@ class controller():
                 cropped = self.License_Plate.get_license_region(image2)
                 print("cropped", cropped)
                 if cropped.size == 0:
-                    print('HERE')
+                    print('HERE') #For some reason removing breaks code lol
                 else:
                     crop_height, crop_width, useless = cropped.shape
                     print("SIZE", crop_height, crop_width)
-                    Parking_number_image = cropped[int(crop_height / 3):2*int(crop_height)/3,int(crop_width / 2):int(crop_width * 9.0 / 10)]
-                    cv2.imshow("Parking_number_image", Parking_number_image)
-                    cv2.imshow("cropped", cropped)
-                    license_plate_image = cropped[2*int(crop_height / 3):,:]
-                    cv2.imshow("license_plate_image", license_plate_image)
+
+                    Parking_number_image = cropped[int(2 * crop_height / 5):int(3 * crop_height / 4.0),int(crop_width / 2):int(crop_width * 9.0 / 10)]
+                    self.Reader.get_parking_id(Parking_number_image)
+                    license_plate_image = cropped[2*int(crop_height / 3):, int(crop_width * 1.0 / 10.0): int(crop_width * 9.0 / 10.0)]
+                    self.Reader.get_lisence_plates(license_plate_image)
+
                 
         else:
             image2 = cv_image
