@@ -4,9 +4,9 @@ from tensorflow import keras
 
 class Reader:
 	def __init__(self):
-		#self.model = keras.models.load_model('~/cnn_trainer/model_dir/my_model')
-		# print(model)
-		pass
+		self.model = keras.models.load_model('/home/fizzer/cnn_trainer/model_dir/my_model')
+		print(self.model)
+		
 
 	def get_parking_id(self, p_id_image):
 		ret,thresh = cv2.threshold(p_id_image,50,255,cv2.THRESH_BINARY_INV)

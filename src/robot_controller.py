@@ -30,16 +30,18 @@ class controller():
         self.image_sub = rospy.Subscriber("/R1/pi_camera/image_raw",Image,self.callback)
         self.vel_pub = rospy.Publisher("/R1/cmd_vel/", Twist, queue_size=1)
         self.license = rospy.Publisher("/license_plate",String,queue_size=10)
-        time = rospy.get_time()
-        rate = rospy.Rate(2)
+        # time = rospy.get_time()
+    
         self.twist = Twist()
         self.Lane_Detection = Lane_Detection()
         self.Driver = Driver()
         self.License_Plate = License_Plate()
         self.timer_starter = False
-        self.Reader = Reader()
-
         self.start_time = 0
+        self.Reader = Reader()
+    
+        time.sleep(2)
+        rate = rospy.Rate(2)
 
     def number_red(self, image):
         red_min = np.array([0, 0, 195], np.uint8)
