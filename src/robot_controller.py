@@ -39,8 +39,7 @@ class controller():
         self.timer_starter = False
         self.start_time = 0
         self.Reader = Reader()
-    
-        time.sleep(20)
+
         rate = rospy.Rate(2)
 
     def number_red(self, image):
@@ -61,6 +60,7 @@ class controller():
         if rospy.get_time() - self.start_time >= 60:
             self.license.publish(str('idk,idk,-1,9927'))
         if self.timer_starter == False:
+            time.sleep(7) #To allow tensor flow models to load
             self.license.publish(str('idk,idk,0,AB65'))
             self.timer_starter = True
             self.start_time = rospy.get_time()
@@ -98,7 +98,7 @@ class controller():
 
         self.twist.linear.x = forward_velocity
         self.twist.angular.z = angular_velocity
-        # self.vel_pub.publish(self.twist)
+        self.vel_pub.publish(self.twist)
 
         
 
@@ -114,7 +114,7 @@ class controller():
                 else:
                     crop_height, crop_width, useless = cropped.shape
 
-                    Parking_number_image = cropped[int(2 * crop_height / 5):int(3 * crop_height / 4.0),int(crop_width / 2):int(crop_width * 9.0 / 10)]
+                    Parking_number_image = cropped[int(1 * crop_height / 5):int(6 * crop_height / 7.0),int(crop_width / 2):int(crop_width * 9.0 / 10)]
                     predicted_p_id = self.Reader.get_parking_id(Parking_number_image)
                     license_plate_image = cropped[2*int(crop_height / 3):, int(crop_width * 1.5 / 10.0): int(crop_width * 8.5 / 10.0)]
                     (lp1, lp2, lp3, lp4) = self.Reader.get_lisence_plates(license_plate_image)

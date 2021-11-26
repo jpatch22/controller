@@ -41,16 +41,20 @@ class Reader:
 		
 		sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)[:-1]
 
-		# cv2.imshow('thresh', thresh)
 		
-		#cv2.drawContours(thresh, sorted_contours[0], -1, (0,0,255), 3)
+		cv2.drawContours(thresh, sorted_contours[0], -1, (0,0,255), 3)
+		# cv2.imshow('gray', gray)
+		# cv2.imshow('thresh', thresh)
+
 		if sorted_contours is not None and len(sorted_contours) != 0:
 			(x_min, y_min, box_width, box_height) = cv2.boundingRect(sorted_contours[0])
 			cv2.rectangle(thresh, (x_min - 10, y_min - 10), (x_min + box_width + 10, y_min + box_height + 10),(0,255,0), 4)
 			
 
 			resized_image = cv2.resize(thresh[y_min:y_min + box_height, x_min:x_min+box_width], (140, 140))
-			cv2.imshow('resize', resized_image)
+			
+			#cv2.imshow('resize', resized_image) #p_id debug
+			
 			p_id_cnn = np.array([resized_image])
 			global sess1
 			global graph1
@@ -59,10 +63,9 @@ class Reader:
 				set_session(sess1)
 				prediction = self.model_p_id.predict(p_id_cnn)
 				predicted_num = self.convert_nums(prediction)
-		else:
-			predicted_num = 0
-
-		return predicted_num
+				return predicted_num
+		return 0
+		
 
 	def convert_nums(self, array):
 		conv = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
@@ -125,7 +128,7 @@ class Reader:
 			(x_min, y_min, box_width, box_height) = sb
 			cv2.rectangle(img_copy, (x_min - 10, y_min - 10), (x_min + box_width + 10, y_min + box_height + 10),(0,255,0), 4)
 
-		cv2.imshow('copy', img_copy)
+		#cv2.imshow('copy', img_copy) lisence plate debugger
 
 		lp_letters = []
 		lp_nums = []
