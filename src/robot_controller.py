@@ -40,7 +40,7 @@ class controller():
         self.start_time = 0
         self.Reader = Reader()
     
-        time.sleep(2)
+        time.sleep(20)
         rate = rospy.Rate(2)
 
     def number_red(self, image):
@@ -98,7 +98,7 @@ class controller():
 
         self.twist.linear.x = forward_velocity
         self.twist.angular.z = angular_velocity
-        self.vel_pub.publish(self.twist)
+        # self.vel_pub.publish(self.twist)
 
         
 
@@ -108,17 +108,18 @@ class controller():
             image2, car_found = self.License_Plate.find_Car(cv_image)
             if(car_found == True):
                 cropped = self.License_Plate.get_license_region(image2)
-                print("cropped", cropped)
+                #print("cropped", cropped)
                 if cropped.size == 0:
                     print('HERE') #For some reason removing breaks code lol
                 else:
                     crop_height, crop_width, useless = cropped.shape
-                    print("SIZE", crop_height, crop_width)
 
                     Parking_number_image = cropped[int(2 * crop_height / 5):int(3 * crop_height / 4.0),int(crop_width / 2):int(crop_width * 9.0 / 10)]
-                    self.Reader.get_parking_id(Parking_number_image)
-                    license_plate_image = cropped[2*int(crop_height / 3):, int(crop_width * 1.0 / 10.0): int(crop_width * 9.0 / 10.0)]
-                    self.Reader.get_lisence_plates(license_plate_image)
+                    predicted_p_id = self.Reader.get_parking_id(Parking_number_image)
+                    license_plate_image = cropped[2*int(crop_height / 3):, int(crop_width * 1.5 / 10.0): int(crop_width * 8.5 / 10.0)]
+                    (lp1, lp2, lp3, lp4) = self.Reader.get_lisence_plates(license_plate_image)
+
+                    print("P_ID: ", predicted_p_id, "Predicted Lisence Plate: ", lp1, lp2, lp3, lp4)
 
                 
         else:
