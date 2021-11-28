@@ -22,6 +22,7 @@ from lanes_class import Lane_Detection
 from driver import Driver
 from license_plate import License_Plate
 from reader import Reader
+from pedesterian import Ped_Detection
 
 class controller():
 
@@ -39,6 +40,9 @@ class controller():
         self.timer_starter = False
         self.start_time = 0
         self.Reader = Reader()
+        self.Ped_Detection = Ped_Detection()
+
+        self.at_crosswalk = False
 
         rate = rospy.Rate(2)
 
@@ -69,10 +73,19 @@ class controller():
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
-        
-        
 
-        if rospy.get_time()- self.start_time < 5:
+        # cv2.imshow("Raw", cv_image)
+
+        if self.number_red(cv_image) > 40000 and self.at_crosswalk == False:
+            drive = self.Ped_Detection.drive_or_not(cv_image)
+            if drive:
+                line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'R')
+                forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'R')
+                self.at_crosswalk = True
+            else:
+                forward_velocity = 0
+                angular_velocity = 0
+        elif rospy.get_time()- self.start_time < 2:
             line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
             forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
         else:
@@ -123,6 +136,7 @@ class controller():
         image2 = cv2.addWeighted(image2, 0.8, line_image, 1, 1)
 
         cv2.imshow("Debugging window",image2)
+
         
         # cv2.imshow("li", line_image)
         # print(image2.shape, line_image.shape, cv_image)

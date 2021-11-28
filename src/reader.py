@@ -16,6 +16,8 @@ class Reader:
 		# self.model_p_id = models.load_model('/home/fizzer/train_cnn/p_id_training/p_id_model')
 		# self.model_lp_num = models.load_model('/home/fizzer/train_cnn/lp_num_train_data/lp_num_model')
 		# self.model_lp_letters = models.load_model('/home/fizzer/train_cnn/lp_letter_train_data/lp_letter_model')
+		self.p_id_label = 0
+		self.lp_label = 0
 		pass
 
 	def check_p_id_box_valid(self, box):
@@ -54,6 +56,8 @@ class Reader:
 			resized_image = cv2.resize(thresh[y_min:y_min + box_height, x_min:x_min+box_width], (140, 140))
 			
 			#cv2.imshow('resize', resized_image) #p_id debug
+			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.p_id_label), resized_image)
+			#self.p_id_label += 1
 			
 			p_id_cnn = np.array([resized_image])
 			global sess1
@@ -144,10 +148,11 @@ class Reader:
 					lp_nums.append(cv2.merge((lp, lp, lp)))
 				i += 1
 
-			# cv2.imshow("lp1", plates[0])
-			# cv2.imshow("lp2", plates[1])
-			# cv2.imshow("lp3", plates[2])
-			# cv2.imshow("lp4", plates[3])
+			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.lp_label), lp_letters[0])
+			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.lp_label + 1), lp_letters[1])
+			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.lp_label + 2), lp_nums[0])
+			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.lp_label + 3), lp_nums[1])
+			#self.lp_label += 4
 
 			lp_letters_na = np.asarray(lp_letters)
 			lp_nums_na = np.asarray(lp_nums)
