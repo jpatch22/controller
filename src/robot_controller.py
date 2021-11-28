@@ -60,7 +60,7 @@ class controller():
         if rospy.get_time() - self.start_time >= 60:
             self.license.publish(str('idk,idk,-1,9927'))
         if self.timer_starter == False:
-            time.sleep(7) #To allow tensor flow models to load
+            #time.sleep(7) #To allow tensor flow models to load
             self.license.publish(str('idk,idk,0,AB65'))
             self.timer_starter = True
             self.start_time = rospy.get_time()
@@ -70,8 +70,14 @@ class controller():
         except CvBridgeError as e:
             print(e)
         
-        line_image, left_lane_bottom, right_lane_bottom = self.Lane_Detection.process_image(cv_image)
-        forward_velocity, angular_velocity = 0,0
+        
+
+        if rospy.get_time()- self.start_time < 5:
+            line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
+            forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
+        else:
+            line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'R')
+            forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'R')
 
         font                   = cv2.FONT_HERSHEY_SIMPLEX
         bottomLeftCornerOfText = (10,500)
@@ -86,16 +92,6 @@ class controller():
             fontColor,
             lineType)
         
-
-        if self.number_red(cv_image) > 300:
-            forward_velocity = 0.2
-            angular_velocty = 0
-        else:
-            if rospy.get_time()- self.start_time < 5:
-                forward_velocity, angular_velocity = self.Driver.controller(left_lane_bottom, right_lane_bottom, 'L')
-            else:
-                forward_velocity, angular_velocity = self.Driver.controller(left_lane_bottom, right_lane_bottom, 'R')    
-
         self.twist.linear.x = forward_velocity
         self.twist.angular.z = angular_velocity
         self.vel_pub.publish(self.twist)

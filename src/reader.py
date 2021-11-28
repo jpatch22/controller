@@ -13,10 +13,10 @@ set_session(sess1)
 
 class Reader:
 	def __init__(self):
-		self.model_p_id = models.load_model('/home/fizzer/train_cnn/p_id_training/p_id_model')
-		self.model_lp_num = models.load_model('/home/fizzer/train_cnn/lp_num_train_data/lp_num_model')
-		self.model_lp_letters = models.load_model('/home/fizzer/train_cnn/lp_letter_train_data/lp_letter_model')
-		#pass
+		# self.model_p_id = models.load_model('/home/fizzer/train_cnn/p_id_training/p_id_model')
+		# self.model_lp_num = models.load_model('/home/fizzer/train_cnn/lp_num_train_data/lp_num_model')
+		# self.model_lp_letters = models.load_model('/home/fizzer/train_cnn/lp_letter_train_data/lp_letter_model')
+		pass
 
 	def check_p_id_box_valid(self, box):
 		min_width = 100
@@ -59,11 +59,11 @@ class Reader:
 			global sess1
 			global graph1
 
-			with graph1.as_default():
-				set_session(sess1)
-				prediction = self.model_p_id.predict(p_id_cnn)
-				predicted_num = self.convert_nums(prediction)
-				return predicted_num
+			# with graph1.as_default():
+			# 	set_session(sess1)
+			# 	prediction = self.model_p_id.predict(p_id_cnn)
+			# 	predicted_num = self.convert_nums(prediction)
+			# 	return predicted_num
 		return 0
 		
 
@@ -156,13 +156,13 @@ class Reader:
 			global graph1
 			letter_p = [] 
 			num_p = []
-			with graph1.as_default():
-				set_session(sess1)
-				letter_prediction_arrays = self.model_lp_letters.predict(lp_letters_na)
-				letter_p = self.convert_letters(letter_prediction_arrays)
-				num_prediction_arrays = self.model_lp_num.predict(lp_nums_na)
-				num_p = self.convert_nums(num_prediction_arrays)
-			return (letter_p[0], letter_p[1], num_p[0], num_p[1])
+			# with graph1.as_default():
+			# 	set_session(sess1)
+			# 	letter_prediction_arrays = self.model_lp_letters.predict(lp_letters_na)
+			# 	letter_p = self.convert_letters(letter_prediction_arrays)
+			# 	num_prediction_arrays = self.model_lp_num.predict(lp_nums_na)
+			# 	num_p = self.convert_nums(num_prediction_arrays)
+			# return (letter_p[0], letter_p[1], num_p[0], num_p[1])
 				
 		# cv2.imshow("mask2", ima_msk)
 		return (0, 0, 0, 0)
