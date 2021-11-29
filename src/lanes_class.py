@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 class Lane_Detection:
     def __init__(self):
-        self.cutoff = 200
+        self.cutoff = 100
         self.right_correct_intercept = 1250
 
     def hsv_filter(self, image):

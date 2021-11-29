@@ -13,9 +13,9 @@ set_session(sess1)
 
 class Reader:
 	def __init__(self):
-		# self.model_p_id = models.load_model('/home/fizzer/train_cnn/p_id_training/p_id_model')
-		# self.model_lp_num = models.load_model('/home/fizzer/train_cnn/lp_num_train_data/lp_num_model')
-		# self.model_lp_letters = models.load_model('/home/fizzer/train_cnn/lp_letter_train_data/lp_letter_model')
+		self.model_p_id = models.load_model('/home/fizzer/train_cnn/p_id_training/p_id_model')
+		self.model_lp_num = models.load_model('/home/fizzer/train_cnn/lp_num_train_data/lp_num_model')
+		self.model_lp_letters = models.load_model('/home/fizzer/train_cnn/lp_letter_train_data/lp_letter_model')
 		self.p_id_label = 0
 		self.lp_label = 0
 		pass
@@ -44,7 +44,7 @@ class Reader:
 		sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)[:-1]
 
 		
-		cv2.drawContours(thresh, sorted_contours[0], -1, (0,0,255), 3)
+		#cv2.drawContours(thresh, sorted_contours[0], -1, (0,0,255), 3)
 		# cv2.imshow('gray', gray)
 		# cv2.imshow('thresh', thresh)
 
@@ -55,19 +55,19 @@ class Reader:
 
 			resized_image = cv2.resize(thresh[y_min:y_min + box_height, x_min:x_min+box_width], (140, 140))
 			
-			#cv2.imshow('resize', resized_image) #p_id debug
-			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.p_id_label), resized_image)
-			#self.p_id_label += 1
+			cv2.imshow('resize', resized_image) #p_id debug
+			# cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.p_id_label), resized_image)
+			self.p_id_label += 1
 			
 			p_id_cnn = np.array([resized_image])
 			global sess1
 			global graph1
 
-			# with graph1.as_default():
-			# 	set_session(sess1)
-			# 	prediction = self.model_p_id.predict(p_id_cnn)
-			# 	predicted_num = self.convert_nums(prediction)
-			# 	return predicted_num
+			with graph1.as_default():
+				set_session(sess1)
+				prediction = self.model_p_id.predict(p_id_cnn)
+				predicted_num = self.convert_nums(prediction)
+				return predicted_num
 		return 0
 		
 
@@ -89,6 +89,7 @@ class Reader:
 
 	def get_lisence_plates(self, licence_image):
 		resized_image = cv2.resize(licence_image, (800, 200))
+		#cv2.imshow("input", resized_image)
 		
 		hsv = cv2.cvtColor(resized_image, cv2.COLOR_BGR2HSV)
 		
@@ -132,7 +133,7 @@ class Reader:
 			(x_min, y_min, box_width, box_height) = sb
 			cv2.rectangle(img_copy, (x_min - 10, y_min - 10), (x_min + box_width + 10, y_min + box_height + 10),(0,255,0), 4)
 
-		#cv2.imshow('copy', img_copy) lisence plate debugger
+		cv2.imshow('copy', img_copy) #lisence plate debugger
 
 		lp_letters = []
 		lp_nums = []
@@ -148,11 +149,12 @@ class Reader:
 					lp_nums.append(cv2.merge((lp, lp, lp)))
 				i += 1
 
-			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.lp_label), lp_letters[0])
-			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.lp_label + 1), lp_letters[1])
-			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.lp_label + 2), lp_nums[0])
-			#cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.lp_label + 3), lp_nums[1])
-			#self.lp_label += 4
+			if len(lp_nums) !=0 and len(lp_letters) != 0:
+				cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label), lp_letters[0])
+				cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 1), lp_letters[1])
+				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 2), lp_nums[0])
+				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 3), lp_nums[1])
+			self.lp_label += 4
 
 			lp_letters_na = np.asarray(lp_letters)
 			lp_nums_na = np.asarray(lp_nums)
@@ -161,13 +163,13 @@ class Reader:
 			global graph1
 			letter_p = [] 
 			num_p = []
-			# with graph1.as_default():
-			# 	set_session(sess1)
-			# 	letter_prediction_arrays = self.model_lp_letters.predict(lp_letters_na)
-			# 	letter_p = self.convert_letters(letter_prediction_arrays)
-			# 	num_prediction_arrays = self.model_lp_num.predict(lp_nums_na)
-			# 	num_p = self.convert_nums(num_prediction_arrays)
-			# return (letter_p[0], letter_p[1], num_p[0], num_p[1])
+			with graph1.as_default():
+				set_session(sess1)
+				letter_prediction_arrays = self.model_lp_letters.predict(lp_letters_na)
+				letter_p = self.convert_letters(letter_prediction_arrays)
+				num_prediction_arrays = self.model_lp_num.predict(lp_nums_na)
+				num_p = self.convert_nums(num_prediction_arrays)
+			return (letter_p[0], letter_p[1], num_p[0], num_p[1])
 				
 		# cv2.imshow("mask2", ima_msk)
 		return (0, 0, 0, 0)
@@ -186,10 +188,10 @@ class Reader:
 		return (x1, y1, w1, h1, x2, y2, w2, h2)
 
 	def check_box_validity(self, list_of_boxes):
-		min_width = 100
+		min_width = 50
 		max_width = 200
-		min_height = 35
-		max_height = 75
+		min_height = 25
+		max_height = 300
 		for b in list_of_boxes:
 			(x_min, y_min, box_width, box_height) = b
 			if box_width > max_width or box_width < min_width:

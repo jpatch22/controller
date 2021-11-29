@@ -23,6 +23,7 @@ from driver import Driver
 from license_plate import License_Plate
 from reader import Reader
 from pedesterian import Ped_Detection
+# from vehicle import Vehicle_Detection
 
 class controller():
 
@@ -42,7 +43,13 @@ class controller():
         self.Reader = Reader()
         self.Ped_Detection = Ped_Detection()
 
+        self.time_crosswalk_1 = 100000
+
         self.at_crosswalk = False
+
+        self.time_detect_lp_1 = 100000
+        self.length_of_turn_in = 10
+        self.turn_delay = 3
 
         rate = rospy.Rate(2)
 
@@ -55,7 +62,7 @@ class controller():
 
     def number_blue(self, image):
         red_min = np.array([0, 0, 0], np.uint8)
-        red_max = np.array([80, 5, 5], np.uint8)
+        red_max = np.array([95, 5, 5], np.uint8)
 
         dst = cv2.inRange(image, red_min, red_max)
         return cv2.countNonZero(dst)
@@ -64,10 +71,13 @@ class controller():
         if rospy.get_time() - self.start_time >= 60:
             self.license.publish(str('idk,idk,-1,9927'))
         if self.timer_starter == False:
-            #time.sleep(7) #To allow tensor flow models to load
+            time.sleep(15) #To allow tensor flow models to load
             self.license.publish(str('idk,idk,0,AB65'))
             self.timer_starter = True
             self.start_time = rospy.get_time()
+
+        if rospy.get_time() - self.time_crosswalk_1 > 5:
+            self.at_crosswalk = False
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
@@ -76,18 +86,25 @@ class controller():
 
         # cv2.imshow("Raw", cv_image)
 
-        if self.number_red(cv_image) > 40000 and self.at_crosswalk == False:
+        if self.number_red(cv_image) > 10000 and self.at_crosswalk == False:
             drive = self.Ped_Detection.drive_or_not(cv_image)
+            line_image = np.zeros_like(cv_image)
             if drive:
                 line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'R')
                 forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'R')
                 self.at_crosswalk = True
-            else:
-                forward_velocity = 0
-                angular_velocity = 0
-        elif rospy.get_time()- self.start_time < 2:
+                self.time_crosswalk_1 = rospy.get_time()
+            elif drive == False:
+                forward_velocity = 0.0
+                angular_velocity = 0.0
+        elif rospy.get_time() - self.start_time < 3.5:
             line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
             forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
+        elif self.time_detect_lp_1 < rospy.get_time() < self.time_detect_lp_1 + self.length_of_turn_in:
+            print("Turning in")
+            line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
+            forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
+            #Untested and Untuned
         else:
             line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'R')
             forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'R')
@@ -98,24 +115,26 @@ class controller():
         fontColor              = (255,255,255)
         lineType               = 2
 
-        cv2.putText(line_image, "angular_velocity : {}, forward_velocity: {}".format(angular_velocity, forward_velocity), 
-            bottomLeftCornerOfText, 
-            font, 
-            fontScale,
-            fontColor,
-            lineType)
+        # cv2.putText(line_image, "angular_velocity : {}, forward_velocity: {}".format(angular_velocity, forward_velocity), 
+        #     bottomLeftCornerOfText, 
+        #     font, 
+        #     fontScale,
+        #     fontColor,
+        #     lineType)
         
         self.twist.linear.x = forward_velocity
         self.twist.angular.z = angular_velocity
         self.vel_pub.publish(self.twist)
 
-        
 
         # cv2.imshow("contours",edged)
         x = int(self.number_blue(cv_image))
-        if x > 75:
+        
+        if x > 40:
             image2, car_found = self.License_Plate.find_Car(cv_image)
+            #print("In reader loop", car_found)
             if(car_found == True):
+                #print("Front of car_detected")
                 cropped = self.License_Plate.get_license_region(image2)
                 #print("cropped", cropped)
                 if cropped.size == 0:
@@ -125,8 +144,11 @@ class controller():
 
                     Parking_number_image = cropped[int(1 * crop_height / 5):int(6 * crop_height / 7.0),int(crop_width / 2):int(crop_width * 9.0 / 10)]
                     predicted_p_id = self.Reader.get_parking_id(Parking_number_image)
-                    license_plate_image = cropped[2*int(crop_height / 3):, int(crop_width * 1.5 / 10.0): int(crop_width * 8.5 / 10.0)]
+                    license_plate_image = cropped[int(2*crop_height / 3):, int(crop_width * 1.5 / 10.0): int(crop_width * 8.5 / 10.0)]
                     (lp1, lp2, lp3, lp4) = self.Reader.get_lisence_plates(license_plate_image)
+                    if predicted_p_id[0] == '3':
+                        print("Detected last turn in")
+                        self.time_detect_lp_1 = rospy.get_time() + self.turn_delay
 
                     print("P_ID: ", predicted_p_id, "Predicted Lisence Plate: ", lp1, lp2, lp3, lp4)
 
