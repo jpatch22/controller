@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 
 class Lane_Detection:
     def __init__(self):
-        self.cutoff = 100
-        self.right_correct_intercept = 1250
+        self.cutoff = 155
+        self.right_correct_intercept = 1100
 
     def hsv_filter(self, image):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, np.array([10,90,135]) , np.array([90,255,255]))
+        mask = cv2.inRange(hsv, np.array([0,0,70]) , np.array([255,200,255]))
         return mask
 
     def canny(self, image):
@@ -104,17 +104,21 @@ class Lane_Detection:
 
     def follow_right_line(self, img):
         hsv = self.hsv_filter(img)
-        can = self.canny(hsv)
+        blur = cv2.GaussianBlur(hsv, (5,5), 10)
+        can = self.canny(blur)
+        cv2.imshow("can", can)
         height, width, channels = img.shape
 
         right_cropped_image = self.right_region_of_interest(can)
-        right_lines = cv2.HoughLinesP(right_cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
+        right_lines = cv2.HoughLinesP(right_cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=20, maxLineGap=10)
+        if right_lines is None:
+            return (np.zeros(img.shape, dtype=np.uint8), 1500, None)
         right_averaged_lines = self.averaged_lines(height, self.cutoff, right_lines)
         right_line_image = self.right_display_lines(img, right_averaged_lines)
         main_intercept = self.calc_intercept(right_averaged_lines, height)
 
         right_turning_region = self.right_turning_region(can)
-        right_turn_lines = cv2.HoughLinesP(right_turning_region, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
+        right_turn_lines = cv2.HoughLinesP(right_turning_region, 2, np.pi/180, 100, np.array([]), minLineLength=20, maxLineGap=10)
         if right_turn_lines is None:
             turning_intercept = self.right_correct_intercept
         else: 
@@ -130,11 +134,13 @@ class Lane_Detection:
 
     def follow_left_line(self, img):
         hsv = self.hsv_filter(img)
-        can = self.canny(hsv)
+        blur = cv2.GaussianBlur(hsv, (5,5), 10)
+        can = self.canny(blur)
+        cv2.imshow("can", can)
         height, width, channels = img.shape
 
         left_cropped_image = self.left_region_of_interest(can)
-        left_lines = cv2.HoughLinesP(left_cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
+        left_lines = cv2.HoughLinesP(left_cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=20, maxLineGap=10)
         if left_lines is not None:
             left_averaged_lines = self.averaged_lines(height, self.cutoff, left_lines)
             left_line_image = self.left_display_lines(img, left_averaged_lines)

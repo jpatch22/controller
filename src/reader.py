@@ -55,7 +55,7 @@ class Reader:
 
 			resized_image = cv2.resize(thresh[y_min:y_min + box_height, x_min:x_min+box_width], (140, 140))
 			
-			cv2.imshow('resize', resized_image) #p_id debug
+			#cv2.imshow('resize', resized_image) #p_id debug
 			# cv2.imwrite("/home/fizzer/train_cnn/p_id_auto_collect_data/{}.png".format(self.p_id_label), resized_image)
 			self.p_id_label += 1
 			
@@ -133,7 +133,7 @@ class Reader:
 			(x_min, y_min, box_width, box_height) = sb
 			cv2.rectangle(img_copy, (x_min - 10, y_min - 10), (x_min + box_width + 10, y_min + box_height + 10),(0,255,0), 4)
 
-		cv2.imshow('copy', img_copy) #lisence plate debugger
+		#cv2.imshow('copy', img_copy) #lisence plate debugger
 
 		lp_letters = []
 		lp_nums = []
@@ -148,8 +148,8 @@ class Reader:
 				else: 
 					lp_nums.append(cv2.merge((lp, lp, lp)))
 				i += 1
-
-			if len(lp_nums) !=0 and len(lp_letters) != 0:
+			# print("SHAPE", lp_nums[0].shape)
+			if len(lp_nums) !=0 and len(lp_letters) != 0 and lp_nums[0].shape == (140, 140, 3) and lp_nums[1].shape == (140, 140, 3):
 				cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label), lp_letters[0])
 				cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 1), lp_letters[1])
 				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 2), lp_nums[0])

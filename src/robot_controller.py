@@ -48,8 +48,11 @@ class controller():
         self.at_crosswalk = False
 
         self.time_detect_lp_1 = 100000
-        self.length_of_turn_in = 10
-        self.turn_delay = 3
+        self.length_of_turn_in = 6
+        self.turn_delay = 2
+
+        self.read_penultimate = 100000
+        self.penultimate_dt = 4
 
         rate = rospy.Rate(2)
 
@@ -72,6 +75,10 @@ class controller():
             self.license.publish(str('idk,idk,-1,9927'))
         if self.timer_starter == False:
             time.sleep(15) #To allow tensor flow models to load
+            # self.twist.linear.x = 0.1
+            # self.twist.angular.z = 0.05
+            # self.vel_pub.publish(self.twist)
+            # time.sleep(1)
             self.license.publish(str('idk,idk,0,AB65'))
             self.timer_starter = True
             self.start_time = rospy.get_time()
@@ -97,17 +104,22 @@ class controller():
             elif drive == False:
                 forward_velocity = 0.0
                 angular_velocity = 0.0
-        elif rospy.get_time() - self.start_time < 3.5:
+        elif rospy.get_time() - self.start_time < 3.3:
             line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
             forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
         elif self.time_detect_lp_1 < rospy.get_time() < self.time_detect_lp_1 + self.length_of_turn_in:
             print("Turning in")
             line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
             forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
-            #Untested and Untuned
+        elif rospy.get_time() > self.penultimate_dt + self.read_penultimate:
+            forward_velocity = 0.2
+            angular_velocity = 0.0
         else:
             line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'R')
             forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'R')
+
+        if rospy.get_time() > self.time_detect_lp_1 + self.length_of_turn_in:
+            print("finished turning in")
 
         font                   = cv2.FONT_HERSHEY_SIMPLEX
         bottomLeftCornerOfText = (10,500)
@@ -149,6 +161,9 @@ class controller():
                     if predicted_p_id[0] == '3':
                         print("Detected last turn in")
                         self.time_detect_lp_1 = rospy.get_time() + self.turn_delay
+                    if predicted_p_id[0] == '7':
+                        print("Detected CAR")
+                        self.read_penultimate = rospy.get_time()
 
                     print("P_ID: ", predicted_p_id, "Predicted Lisence Plate: ", lp1, lp2, lp3, lp4)
 
