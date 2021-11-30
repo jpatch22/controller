@@ -25,7 +25,7 @@ class Vehicle_Detection:
 		filter_a = self.hsv_filter(image)
 		area = self.get_vehicle_size(filter_a)
 		print(area)
-		if area > 5000:
-			return False
-		else:
+		if area > 15000:
 			return True
+		else:
+			return False
