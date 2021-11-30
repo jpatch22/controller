@@ -107,10 +107,10 @@ class controller():
         elif rospy.get_time() - self.start_time < 3.3:
             line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
             forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
-        elif self.time_detect_lp_1 < rospy.get_time() < self.time_detect_lp_1 + self.length_of_turn_in:
-            print("Turning in")
-            line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
-            forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
+        # elif self.time_detect_lp_1 < rospy.get_time() < self.time_detect_lp_1 + self.length_of_turn_in:
+        #     print("Turning in")
+        #     line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
+        #     forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
         elif rospy.get_time() > self.penultimate_dt + self.read_penultimate:
             forward_velocity = 0.2
             angular_velocity = 0.0
@@ -155,17 +155,21 @@ class controller():
                     crop_height, crop_width, useless = cropped.shape
 
                     Parking_number_image = cropped[int(1 * crop_height / 5):int(6 * crop_height / 7.0),int(crop_width / 2):int(crop_width * 9.0 / 10)]
-                    predicted_p_id = self.Reader.get_parking_id(Parking_number_image)
+                    (predicted_p_id, c1) = self.Reader.get_parking_id(Parking_number_image)
                     license_plate_image = cropped[int(2*crop_height / 3):, int(crop_width * 1.5 / 10.0): int(crop_width * 8.5 / 10.0)]
-                    (lp1, lp2, lp3, lp4) = self.Reader.get_lisence_plates(license_plate_image)
-                    if predicted_p_id[0] == '3':
-                        print("Detected last turn in")
-                        self.time_detect_lp_1 = rospy.get_time() + self.turn_delay
-                    if predicted_p_id[0] == '7':
-                        print("Detected CAR")
-                        self.read_penultimate = rospy.get_time()
+                    (lp1, lp2, lp3, lp4, c2) = self.Reader.get_lisence_plates(license_plate_image)
+                    if c1 > 0.99 and c2 > 0.99:
+                        message = predicted_p_id[0] + ',' + lp1 + lp2 + lp3 + lp4
+                        self.license.publish(str("Miti, we love you," + message))
+                        print(message)
+                        if predicted_p_id[0] == '3':
+                            print("Detected last turn in")
+                            self.time_detect_lp_1 = rospy.get_time() + self.turn_delay
+                        if predicted_p_id[0] == '7':
+                            print("Detected CAR")
+                            self.read_penultimate = rospy.get_time()
 
-                    print("P_ID: ", predicted_p_id, "Predicted Lisence Plate: ", lp1, lp2, lp3, lp4)
+                    # print("P_ID: ", predicted_p_id, "Predicted Lisence Plate: ", lp1, lp2, lp3, lp4, "C1 ", c1, "C2", c2)
 
                 
         else:

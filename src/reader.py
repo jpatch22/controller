@@ -67,8 +67,8 @@ class Reader:
 				set_session(sess1)
 				prediction = self.model_p_id.predict(p_id_cnn)
 				predicted_num = self.convert_nums(prediction)
-				return predicted_num
-		return 0
+				return (predicted_num, np.amax(prediction[0]))
+		return (0,0)
 		
 
 	def convert_nums(self, array):
@@ -137,6 +137,7 @@ class Reader:
 
 		lp_letters = []
 		lp_nums = []
+		confidence = []
 		# print(self.check_box_validity(box_list))
 		if self.check_box_validity(box_list):
 			i = 0
@@ -169,10 +170,15 @@ class Reader:
 				letter_p = self.convert_letters(letter_prediction_arrays)
 				num_prediction_arrays = self.model_lp_num.predict(lp_nums_na)
 				num_p = self.convert_nums(num_prediction_arrays)
-			return (letter_p[0], letter_p[1], num_p[0], num_p[1])
+
+				confidence.append(np.amax(letter_prediction_arrays[0]))
+				confidence.append(np.amax(letter_prediction_arrays[1]))
+				confidence.append(np.amax(num_prediction_arrays[0]))
+				confidence.append(np.amax(num_prediction_arrays[1]))
+			return (letter_p[0], letter_p[1], num_p[0], num_p[1], min(confidence))
 				
 		# cv2.imshow("mask2", ima_msk)
-		return (0, 0, 0, 0)
+		return (0, 0, 0, 0, 0)
 
 		
 
