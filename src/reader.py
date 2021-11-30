@@ -150,32 +150,33 @@ class Reader:
 					lp_nums.append(cv2.merge((lp, lp, lp)))
 				i += 1
 			# print("SHAPE", lp_nums[0].shape)
-			if len(lp_nums) !=0 and len(lp_letters) != 0 and lp_nums[0].shape == (140, 140, 3) and lp_nums[1].shape == (140, 140, 3):
+			if len(lp_nums) !=0 and len(lp_letters) != 0:
 				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label), lp_letters[0])
 				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 1), lp_letters[1])
 				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 2), lp_nums[0])
 				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 3), lp_nums[1])
-				self.lp_label += 4
+				if lp_nums[0].shape == (140, 140, 3) and lp_nums[1].shape == (140, 140, 3):
+					self.lp_label += 4
 
-				lp_letters_na = np.asarray(lp_letters)
-				lp_nums_na = np.asarray(lp_nums)
+					lp_letters_na = np.asarray(lp_letters)
+					lp_nums_na = np.asarray(lp_nums)
 
-				global sess1
-				global graph1
-				letter_p = [] 
-				num_p = []
-				with graph1.as_default():
-					set_session(sess1)
-					letter_prediction_arrays = self.model_lp_letters.predict(lp_letters_na)
-					letter_p = self.convert_letters(letter_prediction_arrays)
-					num_prediction_arrays = self.model_lp_num.predict(lp_nums_na)
-					num_p = self.convert_nums(num_prediction_arrays)
+					global sess1
+					global graph1
+					letter_p = [] 
+					num_p = []
+					with graph1.as_default():
+						set_session(sess1)
+						letter_prediction_arrays = self.model_lp_letters.predict(lp_letters_na)
+						letter_p = self.convert_letters(letter_prediction_arrays)
+						num_prediction_arrays = self.model_lp_num.predict(lp_nums_na)
+						num_p = self.convert_nums(num_prediction_arrays)
 
-					confidence.append(np.amax(letter_prediction_arrays[0]))
-					confidence.append(np.amax(letter_prediction_arrays[1]))
-					confidence.append(np.amax(num_prediction_arrays[0]))
-					confidence.append(np.amax(num_prediction_arrays[1]))
-				return (letter_p[0], letter_p[1], num_p[0], num_p[1], min(confidence))
+						confidence.append(np.amax(letter_prediction_arrays[0]))
+						confidence.append(np.amax(letter_prediction_arrays[1]))
+						confidence.append(np.amax(num_prediction_arrays[0]))
+						confidence.append(np.amax(num_prediction_arrays[1]))
+					return (letter_p[0], letter_p[1], num_p[0], num_p[1], min(confidence))
 				
 		# cv2.imshow("mask2", ima_msk)
 		return (0, 0, 0, 0, 0)

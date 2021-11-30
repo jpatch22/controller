@@ -16,7 +16,7 @@ class Vehicle_Detection:
 		color_version = cv2.merge((mask, mask, mask))
 		(x_min, y_min, width, height) = cv2.boundingRect(contours[0])
 		cv2.rectangle(color_version, (x_min, y_min), (x_min + width, y_min + height), (0,255,0), 4)
-		cv2.imshow("color", color_version)
+		#cv2.imshow("color", color_version)
 		return width * height
 
 	def drive_or_not(self, image):
@@ -25,7 +25,7 @@ class Vehicle_Detection:
 		filter_a = self.hsv_filter(image)
 		area = self.get_vehicle_size(filter_a)
 		print(area)
-		if area > 15000:
+		if area > 22000:
 			return True
 		else:
 			return False
