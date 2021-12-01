@@ -10,6 +10,14 @@ class Vehicle_Detection:
 		mask = cv2.inRange(hsv, np.array([0,0,0]) , np.array([0,0,38]))
 		return mask
 
+	def get_cX(self, s):
+		M = cv2.moments(s)
+		if M["m00"] != 0:
+			cX = int(M["m10"] / M["m00"])
+		else:
+			cX = 0
+		return cX
+
 	def get_vehicle_size(self, mask):
 		im, contours, hier = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 		contours = sorted(contours, key=cv2.contourArea, reverse=True)
@@ -25,7 +33,7 @@ class Vehicle_Detection:
 		filter_a = self.hsv_filter(image)
 		area = self.get_vehicle_size(filter_a)
 		print(area)
-		if area > 22000:
+		if area < 1000:
 			return True
 		else:
 			return False

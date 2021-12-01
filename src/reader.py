@@ -150,7 +150,7 @@ class Reader:
 					lp_nums.append(cv2.merge((lp, lp, lp)))
 				i += 1
 			# print("SHAPE", lp_nums[0].shape)
-			if len(lp_nums) !=0 and len(lp_letters) != 0:
+			if len(lp_nums) !=0 and len(lp_nums[0]) != 0:
 				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label), lp_letters[0])
 				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 1), lp_letters[1])
 				# cv2.imwrite("/home/fizzer/train_cnn/lp_auto_collect_data/{}.png".format(self.lp_label + 2), lp_nums[0])
@@ -210,7 +210,10 @@ class Reader:
 
 	def get_cX(self, s):
 		M = cv2.moments(s)
-		cX = int(M["m10"] / M["m00"])
+		if M["m00"] != 0:
+			cX = int(M["m10"] / M["m00"])
+		else:
+			cX = 0
 		return cX
 
 	def l_to_r_box(self, box):

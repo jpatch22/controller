@@ -28,7 +28,7 @@ class Ped_Detection:
 	def drive_or_not(self, image):
 		filter_a = self.hsv_filter(image)
 		(x, y, ped_detected) = self.get_pedesterian_location(filter_a)
-		if x > 550 and x < 750 and ped_detected == True:
+		if x > 580 and x < 750 and ped_detected == True:
 			return True
 		else:
 			return False

@@ -52,9 +52,9 @@ class controller():
 
         self.time_detect_lp_1 = 100000
         self.start_turn_in_2 = 100000
-        self.length_of_turn_in = 3.7
-        self.length_of_turn_in_2 = 2.7 + 1.0
-        self.turn_delay = 2
+        self.length_of_turn_in = 3.0 #3.6 works
+        self.length_of_turn_in_2 = 1.0 + 1.0 #1.5 + 1.0 wo
+        self.turn_delay = 0.5
 
         self.read_penultimate = -100000
         self.penultimate_dt = 1000
@@ -62,7 +62,10 @@ class controller():
         self.cardetected = False
         self.turn_in_one = False
 
-        self.threshold = 90
+        self.stopping = False
+        self.hard_in = False
+
+        self.threshold = 55
 
         rate = rospy.Rate(2)
 
@@ -81,7 +84,7 @@ class controller():
         return cv2.countNonZero(dst)
 
     def callback(self,data):
-        if or rospy.get_time() - self.start_time >= 240:
+        if rospy.get_time() - self.start_time >= 240:
             self.license.publish(str('Miti, we love you,0,AB65'))
         if self.timer_starter == False:
             time.sleep(15) #To allow tensor flow models to load
@@ -104,36 +107,52 @@ class controller():
 
         # cv2.imshow("Raw", cv_image)
 
-        if self.number_red(cv_image) > 10000 and self.at_crosswalk == False:
+        if self.number_red(cv_image) > 9000 and self.at_crosswalk == False:
             drive = self.Ped_Detection.drive_or_not(cv_image)
             line_image = np.zeros_like(cv_image)
             if drive:
-                line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'R')
-                forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'R')
                 self.at_crosswalk = True
-                self.twist.linear.x = 0.2
+                self.twist.linear.x = 0.5
                 self.twist.angular.z = 0.0
                 self.vel_pub.publish(self.twist)
-                rospy.sleep(2.5)
+                rospy.sleep(1)
                 forward_velocity = 0
                 angular_velocity = 0
                 self.time_crosswalk_1 = rospy.get_time()
+                self.stopping = False
             elif drive == False:
+                if self.stopping == True:
+                    forward_velocity = 0.2
+                    rospy.sleep(0.05)
+                    forward_velocity = 0.1
+                    rospy.sleep(0.05)
+                    self.stopping = False
                 forward_velocity = 0.0
                 angular_velocity = 0.0
-        elif rospy.get_time() - self.start_time < 3:
-            self.twist.linear.x = 0.2
+        elif rospy.get_time() - self.start_time < 1.6:
+            self.twist.linear.x = 0.5
             self.twist.angular.z = 0
             self.vel_pub.publish(self.twist)
-            rospy.sleep(1.8)
-            self.twist.linear.x = 0
-            self.twist.angular.z = 0.7
+            rospy.sleep(0.6)
+            self.twist.linear.x = 0.3
+            self.twist.angular.z = 0
             self.vel_pub.publish(self.twist)
-            rospy.sleep(2.2)
+            rospy.sleep(0.2)
+            self.twist.linear.x = 0
+            self.twist.angular.z = 01.6
+            self.vel_pub.publish(self.twist)
+            rospy.sleep(0.9)
             forward_velocity = 0
             angular_velocity = 0
         elif self.time_detect_lp_1 < rospy.get_time() < self.time_detect_lp_1 + self.length_of_turn_in:
             # print("Turning in")
+            if self.hard_in == False:
+                print("hard in")
+                self.twist.linear.x = 0.4
+                self.twist.angular.z = 0.7
+                self.vel_pub.publish(self.twist)
+                rospy.sleep(1)
+                self.hard_in = True
             line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
             forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
             self.turn_in_one = True
@@ -142,14 +161,19 @@ class controller():
             angular_velocity = 0
             if self.Vehicle_Detection.drive_or_not(cv_image) == True:
                 self.cardetected = True
+                # rospy.sleep(5)
                 self.start_turn_in_2 = rospy.get_time()
-                rospy.sleep(1)
         elif self.cardetected == True and rospy.get_time() < self.start_turn_in_2 + self.length_of_turn_in_2:
-            forward_velocity = 0.2 
-            angular_velocity = 0.7
+            # forward_velocity = 0.4 
+            # angular_velocity = 1.5
+            print("Turning")
+            line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'L')
+            forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'L')
             self.read_penultimate = rospy.get_time()
         elif rospy.get_time() < self.penultimate_dt + self.read_penultimate:
             (forward_velocity, angular_velocity) = self.Middle.middle_drive(cv_image)
+            # forward_velocity = 0
+            # angular_velocity = 0
         else:
             line_image, main_intercept, turning_intercept = self.Lane_Detection.process_image(cv_image, 'R')
             forward_velocity, angular_velocity = self.Driver.controller(main_intercept, turning_intercept, 'R')
@@ -206,8 +230,8 @@ class controller():
                             print("Detected last turn in")
                             self.threshold = 120
                             self.time_detect_lp_1 = rospy.get_time() + self.turn_delay
-                        if predicted_p_id[0] == '8':
-                            self.license.publish(str("Miti, we love you, -1, abcd"))
+                        if predicted_p_id[0] == '8' and rospy.get_time() - self.start_time >= 30:
+                            self.license.publish(str("Miti, we love you,-1, DONE"))
 
                     # print("P_ID: ", predicted_p_id, "Predicted Lisence Plate: ", lp1, lp2, lp3, lp4, "C1 ", c1, "C2", c2)
 
@@ -216,7 +240,7 @@ class controller():
             image2 = cv_image
         image2 = cv2.addWeighted(image2, 0.8, line_image, 1, 1)
 
-        # cv2.imshow("Debugging window",image2)
+        cv2.imshow("Debugging window",image2)
 
         
         # cv2.imshow("li", line_image)

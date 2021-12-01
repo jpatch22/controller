@@ -5,11 +5,12 @@ import matplotlib.pyplot as plt
 class Lane_Detection:
     def __init__(self):
         self.cutoff = 155
-        self.right_correct_intercept = 1100
+        self.right_correct_intercept = 1050
 
     def hsv_filter(self, image):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, np.array([0,0,70]) , np.array([255,200,255]))
+        # cv2.imshow("hsv", hsv)
+        mask = cv2.inRange(hsv, np.array([0,0,70]) , np.array([255,160,255]))
         return mask
 
     def canny(self, image):
@@ -106,13 +107,13 @@ class Lane_Detection:
         hsv = self.hsv_filter(img)
         blur = cv2.GaussianBlur(hsv, (5,5), 10)
         can = self.canny(blur)
-        cv2.imshow("can", can)
+        # cv2.imshow("can", can)
         height, width, channels = img.shape
 
         right_cropped_image = self.right_region_of_interest(can)
         right_lines = cv2.HoughLinesP(right_cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=20, maxLineGap=10)
         if right_lines is None:
-            return (np.zeros(img.shape, dtype=np.uint8), 1500, None)
+            return (np.zeros(img.shape, dtype=np.uint8), 1400, None)
         right_averaged_lines = self.averaged_lines(height, self.cutoff, right_lines)
         right_line_image = self.right_display_lines(img, right_averaged_lines)
         main_intercept = self.calc_intercept(right_averaged_lines, height)
@@ -136,7 +137,7 @@ class Lane_Detection:
         hsv = self.hsv_filter(img)
         blur = cv2.GaussianBlur(hsv, (5,5), 10)
         can = self.canny(blur)
-        cv2.imshow("can", can)
+        #cv2.imshow("can", can)
         height, width, channels = img.shape
 
         left_cropped_image = self.left_region_of_interest(can)
